@@ -1,0 +1,61 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  PENDING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  orderNumber      String      @unique @map("order_number")
+  deliveryForecast DateTime    @map("delivery_forecast")
+  customerName     String      @map("customer_name")
+  customerDocument String      @map("customer_document")
+  customerEmail    String?     @map("customer_email")
+  customerPhone    String?     @map("customer_phone")
+  originAddress    String?     @map("origin_address")
+  originLat        Float?      @map("origin_lat")
+  originLng        Float?      @map("origin_lng")
+  deliveryAddress  String      @map("delivery_address")
+  deliveryLat      Float?      @map("delivery_lat")
+  deliveryLng      Float?      @map("delivery_lng")
+  status           OrderStatus @default(PENDING)
+  items            OrderItem[]
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  deletedAt        DateTime?   @map("deleted_at")
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  description String
+  price       Decimal @db.Decimal(10, 2)
+  orderId     String  @map("order_id")
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}

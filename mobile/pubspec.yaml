@@ -1,0 +1,30 @@
+name: naporta_pedidos
+description: "App offline first de pedidos da naPorta (desafio mobile)."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  dio: ^5.9.2
+  drift: ^2.33.0
+  drift_flutter: ^0.3.0
+  flutter:
+    sdk: flutter
+  flutter_map: ^8.3.0
+  flutter_secure_storage: ^10.3.1
+  intl: ^0.20.2
+  latlong2: ^0.9.1
+  path_provider: ^2.1.5
+  provider: ^6.1.5+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.33.0
+  build_runner: ^2.15.0
+  mocktail: ^1.0.5
+flutter:
+  uses-material-design: true

@@ -1,0 +1,24 @@
+# Dependências
+node_modules/
+
+# Build
+dist/
+
+# Prisma Client gerado
+src/generated/
+
+# Ambiente — mesmo sendo um projeto de teste com credenciais fictícias,
+# o .env fica fora do repositório por boa prática; o .env.example já traz
+# valores funcionais para avaliação local (basta copiar)
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# Cobertura de testes
+coverage/
