@@ -1,0 +1,72 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql://naporta_test:naporta_test@127.0.0.1:5432/naporta_test?schema=public
+      JWT_SECRET: test-only-ci-secret-do-not-use-in-production
+      JWT_EXPIRES_IN: 1h
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: naporta_test
+          POSTGRES_PASSWORD: naporta_test
+          POSTGRES_DB: naporta_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U naporta_test -d naporta_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Apply database migrations
+        run: npx prisma migrate deploy
+
+      - name: Check lint
+        run: npm run lint:check
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+      - name: Run end-to-end tests
+        run: npm run test:e2e
+
+      - name: Check coverage
+        run: npm run test:cov
+
+      - name: Build
+        run: npm run build
