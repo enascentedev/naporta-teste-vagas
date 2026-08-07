@@ -35,4 +35,7 @@ O passo a passo completo — incluindo execução sem Docker, no navegador e em 
 ## Testes
 
 - **Mobile**: `flutter test` — ViewModels, repositório offline first (banco em memória) e widgets.
-- **Backend**: validado de ponta a ponta via requisições reais (autenticação, filtros combinados e prova da exclusão lógica no banco); `npm run lint` sem pendências.
+- **Backend**: `npm test`, `npm run test:integration` e `npm run test:e2e` — services,
+  autenticação/JWT, validações, filtros combinados, persistência e exclusão lógica em
+  PostgreSQL real. O workflow `Backend CI` também executa lint sem autocorreção, cobertura
+  e build em pull requests e na `main`.
