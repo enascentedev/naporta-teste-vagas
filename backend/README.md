@@ -68,9 +68,84 @@ npm run start:dev           # API em http://localhost:3000/api
 | `npm run build` | Compila para `dist/` |
 | `npm run start:prod` | Inicia a versão compilada |
 | `npm run seed` | Popula o banco com dados fictícios |
-| `npm run lint` | Roda o ESLint |
+| `npm run lint` | Roda o ESLint e aplica correções automáticas |
+| `npm run lint:check` | Verifica ESLint sem modificar arquivos |
+| `npm test` / `npm run test:unit` | Testes unitários de services e guard |
+| `npm run test:integration` | Integração dos services com PostgreSQL real |
+| `npm run test:e2e` | API completa via HTTP e PostgreSQL real |
+| `npm run test:cov` | Unitários com cobertura mínima obrigatória de 75% |
+| `npm run test:db:prepare` | Gera o Prisma Client e aplica migrations no banco de teste |
 | `npx prisma migrate dev` | Cria/aplica migrations em desenvolvimento |
 | `npx prisma studio` | Interface visual do banco |
+
+## Testes automatizados
+
+### Pré-requisitos e isolamento
+
+- Node.js 22+;
+- Docker + Docker Compose;
+- porta `5434` livre para o PostgreSQL de teste.
+
+O ambiente automatizado usa o banco exclusivo `naporta_test`; ele não usa o banco
+`naporta` de desenvolvimento, não depende do seed e limpa os dados entre cenários. O helper
+de limpeza recusa qualquer `DATABASE_URL` cujo nome de banco não termine em `_test`.
+
+Prepare o ambiente local:
+
+```bash
+cd backend
+cp .env.test.example .env.test
+docker compose -f docker-compose.test.yml up -d --wait
+npm ci
+npm run test:db:prepare
+```
+
+No Windows desta máquina, onde o Docker roda dentro do WSL, prefixe os comandos Docker com
+`wsl`, por exemplo: `wsl docker compose -f docker-compose.test.yml up -d --wait`.
+
+As variáveis exclusivas de teste são:
+
+| Variável         | Uso                           | Valor local documentado                                                            |
+| ---------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | PostgreSQL isolado            | `postgresql://naporta_test:naporta_test@127.0.0.1:5434/naporta_test?schema=public` |
+| `JWT_SECRET`     | Assinatura de tokens de teste | valor fictício de `.env.test.example`                                              |
+| `JWT_EXPIRES_IN` | Expiração de tokens de teste  | `1h`                                                                               |
+
+### Suítes e comandos
+
+```bash
+npm test                  # alias dos unitários
+npm run test:unit         # services e guard, sem banco
+npm run test:integration  # services + constraints/relações reais do PostgreSQL
+npm run test:e2e          # AppModule + HTTP/Supertest + PostgreSQL real
+npm run test:cov          # threshold de 75% nos services/regras
+npm run lint:check        # nunca altera arquivos
+npm run build
+```
+
+Unitários isolam apenas as fronteiras dos services. Integração e E2E nunca substituem o
+PostgreSQL por mocks: aplicam as migrations versionadas e executam serialmente para manter
+limpeza determinística. Para encerrar o banco local:
+
+```bash
+docker compose -f docker-compose.test.yml down -v
+```
+
+### Integração contínua
+
+O workflow `.github/workflows/backend-ci.yml` roda em pull requests e em pushes para
+`main`: instala pelo lockfile, sobe PostgreSQL 16, gera o Prisma Client, aplica migrations,
+executa lint sem escrita, unitários, integração, E2E, cobertura e build. Qualquer etapa
+falha o job; nenhum `.env` local ou segredo real é usado.
+
+### Limitações conhecidas
+
+- A autorização atual é o contrato do desafio: JWT válido em todas as rotas de pedidos;
+  não existem papéis nem controle de propriedade por usuário.
+- `PATCH /orders/:id` com `{}` é aceito como operação idempotente sem alteração e retorna
+  `200`.
+- Prisma 7 carrega o compilador WASM dinamicamente; por isso os scripts com banco iniciam o
+  Jest com `--experimental-vm-modules` no Node 22.
 
 ## Autenticação
 
