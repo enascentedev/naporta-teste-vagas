@@ -11,6 +11,7 @@ src/generated/
 # o .env fica fora do repositório por boa prática; o .env.example já traz
 # valores funcionais para avaliação local (basta copiar)
 .env
+.env.test
 
 # Logs
 *.log
